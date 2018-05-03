@@ -5,7 +5,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
+
+import com.google.gson.*;
 
 public class DBLookUp {
 	
@@ -14,6 +15,7 @@ public class DBLookUp {
 	protected String userName;
 	protected String password;
 	protected String dbType;
+	protected Connection con;
 	
 	public DBLookUp() {
 		
@@ -24,7 +26,6 @@ public class DBLookUp {
     }
     
     public Connection getConnected() {
-    	Connection con = null;
     	return con;
     }
 	
@@ -38,74 +39,36 @@ public class DBLookUp {
 		}
     }
       
-      public ArrayList<String> getColumnName(String query, Connection con) {
-      	
-      	ArrayList<String> finalArray = new ArrayList<String>();
-      	ResultSet rset;
-      	
-      	try{
-  			Statement stmt = con.createStatement();
-  			rset = stmt.executeQuery(query);
-  			ResultSetMetaData rsmd = rset.getMetaData();
-  			int maxColumn = rsmd.getColumnCount();
-  			int current = 1;
-  			
-  			while(current<=maxColumn){
-  				finalArray.add(rsmd.getColumnName(current)+"="+rsmd.getColumnTypeName(current));
-  				current++;
-  			}
-      	}
-      	catch(Exception e){
-      		e.printStackTrace();
-      	}
-      	
-      	return finalArray;
-      }
-      
-      public ArrayList<ArrayList<String>> executeSelect(String query, Connection con, boolean useHeader) {
-  		
-      	ArrayList<ArrayList<String>> finalArray = new ArrayList<ArrayList<String>>();
-  		
-  		ResultSet rset;
+    public JsonArray select (String query, Connection con) {
+    	JsonArray out = new JsonArray();
+    	ResultSet rset;
   		try {
   			Statement stmt = con.createStatement();
   			rset = stmt.executeQuery(query);
   			ResultSetMetaData rsmd = rset.getMetaData();
   			int maxColumn = rsmd.getColumnCount();
 //  			System.out.println(maxColumn);
-  			int column = 1;		
-  			ArrayList<String> outlist = new ArrayList<String>();
-  			if(useHeader){
-  				while(column<=maxColumn){
-  					outlist.add(rsmd.getColumnName(column));
+  			
+  			while (rset.next()) {
+  	  			int column = 1;
+  				JsonObject obj = new JsonObject();
+  				while(column<=maxColumn) {
+  					String colName = rsmd.getColumnName(column);
+  					String val = rset.getString(column);
+  					obj.addProperty(colName, val);
   					column++;
   				}
-  				finalArray.add(outlist);
-//  				System.out.println(finalArray);
+  				out.add(obj);
   			}
-  			column = 1;
-  			while (rset.next()){
-//  				System.out.println("writing all result query");
-  				outlist = new ArrayList<String>();
-  				while(column<=maxColumn){
-  					outlist.add(rset.getString(column));
-  					column++;
-  				}
-  				column = 1;
-//  				System.out.println(outlist);
-  				finalArray.add(outlist);			      
-  			}
-//  			System.out.println(finalArray);
   			
   		} catch (SQLException e) {
   			// TODO Auto-generated catch block
   			e.printStackTrace();
   		}
-  		
-  		return finalArray;
-  	}
+    	return out;
+    }
       
-      public boolean executeStatement(String query, Connection con) {
+      public boolean query(String query, Connection con) {
   		
   		try {
   			Statement stmt = con.createStatement();

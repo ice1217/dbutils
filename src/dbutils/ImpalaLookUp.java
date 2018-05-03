@@ -28,7 +28,7 @@ public class ImpalaLookUp extends DBLookUp {
     	Connection con = null;
 		try {
 			con = DriverManager.getConnection(serverHost+database, userName, password);
-			System.out.println("connected");
+//			System.out.println("connected");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
